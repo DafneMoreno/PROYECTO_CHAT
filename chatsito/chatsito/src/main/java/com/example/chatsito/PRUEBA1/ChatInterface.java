@@ -1,4 +1,4 @@
-package com.example.chatsito;
+package com.example.chatsito.PRUEBA1;
 
 import com.example.chatsito.CServidorArchivo;
 import javafx.application.Application;
