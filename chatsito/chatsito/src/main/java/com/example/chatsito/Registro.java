@@ -1,6 +1,7 @@
 package com.example.chatsito;
 
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.INSERT;
+import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.SELECT_Usuarios;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -52,15 +53,28 @@ public class Registro    extends Application {
 
         // Acción del botón de registro
         registrarButton.setOnAction(e -> {
-            if (validarRegistro(usuarioInput.getText(), contrasenaInput.getText())) {
-                System.out.println("Registro exitoso");
-                InicioSesion InicioSesion = new InicioSesion();
-                Stage stage = new Stage();
-                InicioSesion.start(stage);
-                primaryStage.close(); // Cerrar la ventana de inicio de sesión al abrir la ventana de registro
 
-            } else {
-                System.out.println("El usuario ya existe o la contraseña es demasiado corta");
+            int resultado = validarRegistro(usuarioInput.getText(), contrasenaInput.getText());
+            switch (resultado) {
+                case 1:
+                    System.out.println("El usuario ya existe o la contraseña es demasiado corta");
+                    break;
+                case 0:
+                    int nuevoId = obtenerProximoId();
+                    String id= String.valueOf(nuevoId);
+                    String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
+                    String sentencia = "INSERT INTO Usuarios (id,username,password) VALUES ("+id+","+usuarioInput.getText()+","+contrasenaInput.getText()+")";
+                    System.out.println(sentencia);
+                    INSERT.main(directorio, sentencia);
+                    System.out.println("Registro exitoso");
+                    InicioSesion InicioSesion = new InicioSesion();
+                    Stage stage = new Stage();
+                    InicioSesion.start(stage);
+                    primaryStage.close();                    break;
+                case -1:
+                    System.out.println("La tabla no tiene las columnas 'username' o 'password'.");
+                    // Realiza las acciones correspondientes a un error en la tabla
+                    break;
             }
         });
 
@@ -73,15 +87,11 @@ public class Registro    extends Application {
     }
 
     // Método para validar el registro (puedes implementar tu lógica de validación aquí)
-    private boolean validarRegistro(String usuario, String contrasena) {
-        int nuevoId = obtenerProximoId();
-        String id= String.valueOf(nuevoId);
+    private int validarRegistro(String usuario, String contrasena) {
         String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
-        String sentencia = "INSERT INTO Usuarios (id,username,password) VALUES ("+id+","+usuario+","+contrasena+")";
+        String sentencia= "SELECT * FROM Usuarios WHERE usuario= "+usuario+" AND password= "+ contrasena;
         System.out.println(sentencia);
-        INSERT.main(directorio, sentencia);
-
-        return true;
+        return SELECT_Usuarios.main(directorio, sentencia, usuario, contrasena);
     }
 
     private int obtenerProximoId() {

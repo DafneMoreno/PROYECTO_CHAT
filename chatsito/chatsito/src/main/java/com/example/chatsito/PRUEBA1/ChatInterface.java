@@ -1,6 +1,5 @@
 package com.example.chatsito.PRUEBA1;
 
-import com.example.chatsito.CServidorArchivo;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
