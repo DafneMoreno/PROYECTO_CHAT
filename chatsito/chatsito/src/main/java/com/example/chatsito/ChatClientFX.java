@@ -1,5 +1,6 @@
 package com.example.chatsito;
 
+import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.UPDATE2;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -17,6 +18,7 @@ import java.util.Scanner;
 
 public class ChatClientFX extends Application {
     private String userID;
+    private String Directorio;
     private PrintWriter serverOutput;
     public void setUserID(String userID) {
         this.userID = userID;
@@ -49,6 +51,8 @@ public class ChatClientFX extends Application {
 
         Button sendButton = new Button("Send");
         sendButton.setOnAction(e -> sendMessage(messageInput.getText(), chatArea));
+        Button FOTOButton = new Button("Foto");
+        FOTOButton.setOnAction(e -> cambiarFoto(userID, chatArea));
 
         HBox messageBox = new HBox(messageInput, sendButton);
         messageBox.setAlignment(Pos.CENTER);
@@ -98,6 +102,12 @@ public class ChatClientFX extends Application {
         serverOutput.println(message);
         updateChatArea(chatArea, "You: " + message);
     }
+    private void cambiarFoto(String id, VBox chatArea) {
+        String sentencia =" UPDATE Usuarios SET username = PRUEBA111 WHERE id ="+id ;
+        System.out.println(sentencia);
+        System.out.println(Directorio);
+        UPDATE2.main(Directorio, sentencia);
+    }
 
     private void updateChatArea(VBox chatArea, String message) {
         Platform.runLater(() -> {
@@ -109,5 +119,9 @@ public class ChatClientFX extends Application {
 
     private void closeClient() {
         System.exit(0);
+    }
+
+    public void setDirectorio(String directorio) {
+        Directorio = directorio;
     }
 }

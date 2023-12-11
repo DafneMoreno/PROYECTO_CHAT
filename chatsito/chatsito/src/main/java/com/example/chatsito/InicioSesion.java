@@ -1,5 +1,8 @@
 package com.example.chatsito;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.INSERT;
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.SELECT_ID;
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.SELECT_Usuarios;
@@ -16,8 +19,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class InicioSesion extends Application {
+    private String Directorio=".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
+    private PrintWriter serverOutput;
+    public void setDirectorio(String Directorio) {
+        this.Directorio = Directorio;
+    }
 
     private Stage primaryStage; // Agregar una referencia al Stage de la ventana de inicio de sesión
 
@@ -67,10 +76,10 @@ public class InicioSesion extends Application {
                 case 1:
 
                     System.out.println("Inicio de sesión exitoso");
-                    String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
+                  //  String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
                     String sentencia= "SELECT id FROM Usuarios WHERE username= "+usuarioInput.getText() +" AND password = "+contrasenaInput.getText();
                   //  System.out.println(sentencia+" SENTENCIA DEL SELECT");
-                    SELECT_ID selectID = new SELECT_ID(directorio);
+                    SELECT_ID selectID = new SELECT_ID(Directorio);
                    // selectID.execute(sentencia);
 
                     // Obtener el resultado
@@ -81,7 +90,11 @@ public class InicioSesion extends Application {
                     break;
                 case 0:
                     System.out.println("Credenciales incorrectas");
-                    // Realiza las acciones correspondientes al inicio de sesión incorrecto
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error de inicio de sesión");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.");
+                    alert.showAndWait();
                     break;
                 case -1:
                     System.out.println("La tabla no tiene las columnas 'username' o 'password'.");
@@ -110,9 +123,9 @@ public class InicioSesion extends Application {
 
     // Método para validar las credenciales (puedes implementar tu lógica de autenticación aquí)
     private int validarCredenciales(String usuario, String contrasena) {
-        String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
+       // String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
         String sentencia= "SELECT * FROM Usuarios WHERE usuario= "+usuario+" AND password= "+ contrasena;
-        return SELECT_Usuarios.main(directorio, sentencia, usuario, contrasena);
+        return SELECT_Usuarios.main(Directorio, sentencia, usuario, contrasena);
     }
 
     // Método para abrir la ventana de registro
@@ -126,6 +139,7 @@ public class InicioSesion extends Application {
         ChatClientFX  cliente = new ChatClientFX();
         Stage stage = new Stage();
         cliente.setUserID(ID);
+        cliente.setDirectorio(Directorio);
         cliente.start(stage);
         primaryStage.close(); // Cerrar la ventana de inicio de sesión al abrir la ventana de registro
     }

@@ -7,3 +7,5 @@ CREATE TABLE Usuarios (
 
 SELECT * FROM Usuarios WHERE username= usuarioInput AND password= contrasenaInput;
 SELECT id FROM Usuarios WHERE username= DAFNE AND password = 1234567
+
+UPDATE Usuarios SET username = PRUEBA111 WHERE id = ;
