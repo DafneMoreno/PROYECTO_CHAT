@@ -77,7 +77,7 @@ public class Registro    extends Application {
                     int nuevoId = obtenerProximoId();
                     String id= String.valueOf(nuevoId);
                 //    String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
-                    String sentencia = "INSERT INTO Usuarios (id,username,password,fotoperfil) VALUES ("+id+","+usuarioInput.getText()+","+contrasenaInput.getText()+",.\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT\\FOTOS\\img.png)";
+                    String sentencia = "INSERT INTO Usuarios (id,username,password,fotoperfil) VALUES ("+id+","+usuarioInput.getText()+","+contrasenaInput.getText()+",img.png)";
                     System.out.println(sentencia);
                     INSERT.main(Directorio, sentencia);
                     System.out.println("Registro exitoso");

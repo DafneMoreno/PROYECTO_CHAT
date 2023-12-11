@@ -1,7 +1,9 @@
 package com.example.chatsito;
 
+import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.SELECT_ID;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.UPDATE2;
@@ -62,6 +64,8 @@ public class ChatClientFX extends Application {
         HBox messageBox = new HBox(messageInput, sendButton, FOTOButton);
         messageBox.setAlignment(Pos.CENTER);
 
+
+
         chatArea.getChildren().addAll(new Label("Chat with ---- tu id es "+userID), new ScrollPane(), messageBox);
         chatArea.setMinWidth(250);
 
@@ -79,6 +83,7 @@ public class ChatClientFX extends Application {
         primaryStage.show();
 
         connectToServer(chatArea);
+        setupProfilePicture(root);
     }
 
     private void connectToServer(VBox chatArea) {
@@ -141,11 +146,7 @@ public class ChatClientFX extends Application {
                 System.out.println("Foto copiada con éxito a: " + destino + selectedFile.getName());
 
 
-                ImageView imageView = new ImageView(new Image(((File) selectedFile).toURI().toString()));
-                imageView.setFitHeight(50); // Ajusta la altura según tu preferencia
-                imageView.setFitWidth(50);  // Ajusta el ancho según tu preferencia
-                chatArea.getChildren().add(imageView);
-                String sentencia ="UPDATE Usuarios SET fotoperfil = .\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT\\FOTOS\\" + selectedFile.getName()+" WHERE id ="+id ;
+                String sentencia ="UPDATE Usuarios SET fotoperfil = "+ selectedFile.getName()+" WHERE id ="+id ;
                 System.out.println(sentencia);
                 UPDATE2.main(Directorio, sentencia);
 
@@ -153,6 +154,30 @@ public class ChatClientFX extends Application {
                 e.printStackTrace();
             }
         }
+    }
+    private void setupProfilePicture(BorderPane root) {
+        // Crea un ImageView con la imagen predefinida
+        String sentencia= "SELECT fotoperfil FROM Usuarios WHERE id="+userID;
+        //  System.out.println(sentencia+" SENTENCIA DEL SELECT");
+        SELECT_ID selectFOTO = new SELECT_ID(Directorio);
+        String linkfoto =  selectFOTO.execute(sentencia);
+       // System.out.println("foto de perfil: " + linkfoto);
+       // System.out.println("D:\\USUARIO\\Escritorio\\CUATRI 6\\PROGRAMACIÓN ORIENTADA A OBJETOS\\PROYECTO\\PROYECTO_CHAT\\chatsito\\"+linkfoto);
+
+        Image defaultImage = new Image("D:\\USUARIO\\Escritorio\\CUATRI 6\\PROGRAMACIÓN ORIENTADA A OBJETOS\\PROYECTO\\PROYECTO_CHAT\\chatsito\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT\\FOTOS\\"+linkfoto);
+     //  Image defaultImage = new Image("D:\\USUARIO\\Escritorio\\CUATRI 6\\PROGRAMACIÓN ORIENTADA A OBJETOS\\PROYECTO\\PROYECTO_CHAT\\chatsito\\"+linkfoto);
+        ImageView profileImageView = new ImageView(defaultImage);
+
+        // Configura la imagen en un círculo
+        profileImageView.setFitHeight(50);  // Ajusta el tamaño según tus necesidades
+        profileImageView.setFitWidth(50);
+
+        // Crea un StackPane para superponer la imagen en la esquina
+        StackPane profilePane = new StackPane(profileImageView);
+        StackPane.setAlignment(profileImageView, Pos.TOP_LEFT);
+
+        // Agrega el StackPane al BorderPane en la esquina superior izquierda
+        root.setTop(profilePane);
     }
 
 
