@@ -8,4 +8,7 @@ module com.example.chatsito {
     exports com.example.chatsito;
     exports com.example.chatsito.PRUEBA1;
     opens com.example.chatsito.PRUEBA1 to javafx.fxml;
+  exports com.example.chatsito.Controlador;
+
 }
+
