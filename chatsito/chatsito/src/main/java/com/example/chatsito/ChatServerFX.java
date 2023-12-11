@@ -15,14 +15,17 @@ import java.util.List;
 import java.util.Scanner;
 
 public class ChatServerFX extends Application {
+    private String userID;
     private final List<PrintWriter> clients = new ArrayList<>();
     private TextArea chatArea;
 
     public static void main(String[] args) {
         launch(args);
     }
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
 
-    @Override
     public void start(Stage primaryStage) {
         chatArea = new TextArea();
         chatArea.setEditable(false);

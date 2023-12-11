@@ -1,6 +1,7 @@
 package com.example.chatsito;
 
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.INSERT;
+import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.SELECT_ID;
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.SELECT_Usuarios;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -11,6 +12,10 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+import java.io.IOException;
 
 public class InicioSesion extends Application {
 
@@ -24,6 +29,11 @@ public class InicioSesion extends Application {
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage; // Inicializar la referencia al Stage
         primaryStage.setTitle("Inicio de Sesión");
+        PrintStream originalOut = System.out;
+
+        // Crear un nuevo flujo de salida
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream printStream = new PrintStream(outputStream);
 
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(10, 10, 10, 10));
@@ -55,8 +65,19 @@ public class InicioSesion extends Application {
             int resultado = validarCredenciales(usuarioInput.getText(), contrasenaInput.getText());
             switch (resultado) {
                 case 1:
+
                     System.out.println("Inicio de sesión exitoso");
-                    // Realiza las acciones correspondientes al inicio de sesión exitoso
+                    String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
+                    String sentencia= "SELECT id FROM Usuarios WHERE username= "+usuarioInput.getText() +" AND password = "+contrasenaInput.getText();
+                  //  System.out.println(sentencia+" SENTENCIA DEL SELECT");
+                    SELECT_ID selectID = new SELECT_ID(directorio);
+                   // selectID.execute(sentencia);
+
+                    // Obtener el resultado
+                    String ID_DEL_USUARIO =  selectID.execute(sentencia);
+                    System.out.println("ID: " + ID_DEL_USUARIO);
+                    abrirVentanaServer(ID_DEL_USUARIO);
+                    abrirVentanaCliente(ID_DEL_USUARIO);
                     break;
                 case 0:
                     System.out.println("Credenciales incorrectas");
@@ -99,6 +120,20 @@ public class InicioSesion extends Application {
         Registro registro = new Registro();
         Stage stage = new Stage();
         registro.start(stage);
+        primaryStage.close(); // Cerrar la ventana de inicio de sesión al abrir la ventana de registro
+    }
+    private void abrirVentanaCliente(String ID) {
+        ChatClientFX  cliente = new ChatClientFX();
+        Stage stage = new Stage();
+        cliente.setUserID(ID);
+        cliente.start(stage);
+        primaryStage.close(); // Cerrar la ventana de inicio de sesión al abrir la ventana de registro
+    }
+    private void abrirVentanaServer(String ID) {
+        ChatServerFX  server = new ChatServerFX();
+        Stage stage = new Stage();
+        server.setUserID(ID);
+        server.start(stage);
         primaryStage.close(); // Cerrar la ventana de inicio de sesión al abrir la ventana de registro
     }
 }
