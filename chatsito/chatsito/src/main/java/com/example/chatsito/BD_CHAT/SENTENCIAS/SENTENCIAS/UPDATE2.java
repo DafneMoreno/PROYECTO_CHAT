@@ -1,9 +1,10 @@
 package com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UPDATE2     {
+public class UPDATE2 {
     public static void main(String directorio, String sqlCommand) {
         String patron = "(?i)^UPDATE\\s+(\\w+)\\s+SET\\s+(.+)\\s+WHERE\\s+(.+)";
         if (sqlCommand.matches(patron)) {
@@ -14,6 +15,7 @@ public class UPDATE2     {
             File tabla = new File(directorio, nombreTabla + ".csv");
 
             if (tabla.exists()) {
+                // Usar una ruta absoluta para el archivo temporal
                 File tempFile = new File(directorio, "updateArch.csv");
 
                 try (BufferedReader tablaReader = new BufferedReader(new FileReader(tabla));
@@ -42,6 +44,49 @@ public class UPDATE2     {
                     } else {
                         System.out.println("Filas actualizadas con éxito en la tabla '" + nombreTabla + "'.");
                     }
+
+                    // Cerrar el archivo original
+                    tablaReader.close();
+
+                    // Borrar el archivo original
+                    if (!tabla.delete()) {
+                        System.out.println("No se pudo borrar el archivo original.");
+                        return;
+                    }
+
+                    // Verificar antes de cambiar el nombre
+                    if (!tempFile.exists()) {
+                        System.out.println("El nuevo archivo no existe. No se puede cambiar el nombre.");
+                        return;
+                    }
+
+                    // Cerrar el archivo temporal antes de borrarlo
+                    writer.close();
+
+                    // Borrar el archivo temporal después de cerrarlo
+
+
+                    // Usar una ruta absoluta para el archivo nuevo
+                    File nuevoArchivo = new File(directorio, nombreTabla + ".csv");
+
+                    // Copiar contenido de updateArch a la tabla principal
+                    try (BufferedReader tempFileReader = new BufferedReader(new FileReader(tempFile));
+                         FileWriter nuevoArchivoWriter = new FileWriter(nuevoArchivo, true)) {
+
+                        // Leer y escribir los encabezados
+                        String encabezados2 = tempFileReader.readLine();
+                        nuevoArchivoWriter.write(encabezados2 + "\n");
+
+                        String linea;
+                        while ((linea = tempFileReader.readLine()) != null) {
+                            nuevoArchivoWriter.write(linea + "\n");
+                        }
+
+                        System.out.println("Contenido copiado con éxito al nuevo archivo '" + nuevoArchivo.getAbsolutePath() + "'.");
+                    } catch (IOException e) {
+                        System.out.println("Error al copiar el contenido de updateArch a la tabla principal: " + e.getMessage());
+                    }
+
                 } catch (IOException e) {
                     System.out.println("Error al actualizar filas: " + e.getMessage());
                 }
@@ -52,7 +97,6 @@ public class UPDATE2     {
             System.out.println("El comando SQL no tiene el formato correcto.");
         }
     }
-
     private static boolean evaluarCondicion(String fila, String encabezados, String condicion) {
         String[] columnas = encabezados.split(",");
         String[] valores = fila.split(",");
@@ -153,5 +197,15 @@ public class UPDATE2     {
             }
         }
         return false;
+    }
+    private static void copiarYReemplazarArchivo(File origen, File destino) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(origen));
+             FileWriter writer = new FileWriter(destino)) {
+
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                writer.write(linea + "\n");
+            }
+        }
     }
 }

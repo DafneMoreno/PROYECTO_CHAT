@@ -2,7 +2,8 @@
 CREATE TABLE Usuarios (
   id INT NOT NULL PRIMARY KEY,
   username VARCHAR(50) NOT NULL,
-  password VARCHAR(50) NOT NULL
+  password VARCHAR(50) NOT NULL,
+  fotoperfil NULL
 );
 
 SELECT * FROM Usuarios WHERE username= usuarioInput AND password= contrasenaInput;
