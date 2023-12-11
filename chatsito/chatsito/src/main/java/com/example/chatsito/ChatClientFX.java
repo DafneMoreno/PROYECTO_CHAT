@@ -1,20 +1,21 @@
 package com.example.chatsito;
 
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.SELECT_ID;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.StackPane;
-import javafx.stage.FileChooser;
-
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.UPDATE2;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -22,13 +23,27 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChatClientFX extends Application {
     private String userID;
-    private String Directorio;
+    private int msgcont = 0;
     private PrintWriter serverOutput;
+    private String selected = "";
+    private String Directorio;
+    private boolean priv = false;
+    private String usuario;
+    ListView<String> chatListView = new ListView<>();
     public void setUserID(String userID) {
         this.userID = userID;
+    }
+
+    public void setUsuario(String usuario) {
+        this.usuario = usuario;
+    }
+    public void setDirectorio(String directorio) {
+        Directorio = directorio;
     }
     public static void main(String[] args) {
         launch(args);
@@ -36,48 +51,63 @@ public class ChatClientFX extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+
         BorderPane root = new BorderPane();
 
         VBox chatList = new VBox();
         chatList.setMinWidth(150);
 
-        ListView<String> chatListView = new ListView<>();
-        chatListView.getItems().addAll("Chat 1", "Chat 2", "Chat 3"); // Puedes cargar la lista desde el servidor
-        chatListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            // Lógica para cargar la conversación correspondiente al chat seleccionado
-            // Puedes enviar un mensaje al servidor para obtener el historial del chat, por ejemplo
-        });
-
-        chatList.getChildren().addAll(new Label("Chats"), chatListView);
-
         VBox chatArea = new VBox();
         chatArea.setAlignment(Pos.BOTTOM_LEFT);
 
         TextField messageInput = new TextField();
-        messageInput.setPromptText("Type your messagee...");
-
-        Button sendButton = new Button("Send");
-        sendButton.setOnAction(e -> sendMessage(messageInput.getText(), chatArea));
-        Button FOTOButton = new Button("Foto");
-        FOTOButton.setOnAction(e -> cambiarFoto(userID, chatArea));
-
-        HBox messageBox = new HBox(messageInput, sendButton, FOTOButton);
-        messageBox.setAlignment(Pos.CENTER);
-
-
-
-        chatArea.getChildren().addAll(new Label("Chat with ---- tu id es "+userID), new ScrollPane(), messageBox);
-        chatArea.setMinWidth(250);
-
+        messageInput.setPromptText("Type your message...");
 
         SplitPane splitPane = new SplitPane(chatList, chatArea);
         splitPane.setDividerPositions(0.2); // Ajusta la posición del divisor
 
         root.setCenter(splitPane);
 
+        Button sendButton = new Button("Send");
+        sendButton.setOnAction(e -> sendMessage(messageInput.getText(), chatArea, priv));
+
+        Button FOTOButton = new Button("Foto");
+        FOTOButton.setOnAction(e -> cambiarFoto(userID, chatArea, root,splitPane));
+
+        HBox messageBox = new HBox(messageInput, sendButton, FOTOButton);
+        messageBox.setAlignment(Pos.CENTER);
+
+        chatListView.getItems().addAll("Server Group"); // Puedes cargar la lista desde el servidor
+        chatListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            // Lógica para cargar la conversación correspondiente al chat seleccionado
+            // Puedes enviar un mensaje al servidor para obtener el historial del chat, por ejemplo
+        });
+
+        chatListView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                String selectedItem = chatListView.getSelectionModel().getSelectedItem();
+                if (selectedItem != null && selectedItem.equals("Server Group")) {
+                    priv = false;
+                } else if(selectedItem != null) {
+                    priv = true;
+                    selected = selectedItem;
+                }
+                msgcont = 0;
+                chatArea.getChildren().clear();
+                chatArea.getChildren().addAll(messageBox);
+                serverOutput.println("/clean");
+            }
+        });
+
+        chatList.getChildren().addAll(new Label("Chats"), chatListView);
+
+        chatArea.getChildren().addAll(messageBox);
+        chatArea.setMinWidth(250);
+
         Scene scene = new Scene(root, 600, 400);
 
-        primaryStage.setTitle("WhatsApp-like Chat Client");
+        primaryStage.setTitle("Chat");
         primaryStage.setScene(scene);
         primaryStage.setOnCloseRequest(e -> closeClient());
         primaryStage.show();
@@ -88,8 +118,13 @@ public class ChatClientFX extends Application {
 
     private void connectToServer(VBox chatArea) {
         try {
-            Socket socket = new Socket("localhost", 12345);
+            Socket socket = new Socket("192.168.100.33", 12345);
             serverOutput = new PrintWriter(socket.getOutputStream(), true);
+
+
+            // Enviar el ID del usuario al servidor
+            serverOutput.println("/clean");
+            serverOutput.println("/user " + userID + " " + usuario);
 
             new Thread(() -> {
                 try {
@@ -108,25 +143,52 @@ public class ChatClientFX extends Application {
         }
     }
 
-
-    private void sendMessage(String message, VBox chatArea) {
-        serverOutput.println(message);
-        updateChatArea(chatArea, "You: " + message);
+    private void sendMessage(String message, VBox chatArea, boolean priv) {
+        if(priv){
+            String[] parts = selected.split("\\s+");
+            String numberString = parts[0];
+            serverOutput.println("/private" + " " + userID + "-" + numberString + " " + usuario + ": " + message);
+        } else {
+            serverOutput.println("/mensaje" + " " + userID + " " + usuario + ": " + message);
+        }
     }
-   /* private void cambiarFoto(String id, VBox chatArea) {
-        String sentencia ="UPDATE Usuarios SET username = PRUEBA111 WHERE id ="+id ;
-        System.out.println(sentencia);
-        System.out.println(Directorio);
-        UPDATE2.main(Directorio, sentencia);
-    }*/
 
     private void updateChatArea(VBox chatArea, String message) {
         Platform.runLater(() -> {
-            Label messageLabel = new Label(message);
-            chatArea.getChildren().add(messageLabel);
+            if(message.contains("/mensaje")){
+                String result = message.replaceAll("^/mensaje\\s+", "");
+                Label messageLabel = new Label(result);
+                chatArea.getChildren().add(msgcont, messageLabel);
+                msgcont++;
+            }
+            String[] parts = selected.split("\\s+");
+            String numberString = parts[0];
+            if(message.contains("/private " + userID + "-" + numberString) || message.contains("/private " + numberString + "-" + userID)){
+                String patternString = "/private \\d+-\\d+\\s+";
+                Pattern pattern = Pattern.compile(patternString);
+                Matcher matcher = pattern.matcher(message);
+                String result = matcher.replaceFirst("");
+                Label messageLabel = new Label(result.trim());
+                chatArea.getChildren().add(msgcont, messageLabel);
+                msgcont++;
+            }
+            if(message.contains("/user")){
+                String result = message.replaceAll("^/user\\s+", "");
+                if(!result.contains(userID + " " + usuario)){
+                    if(!chatListView.getItems().contains(result)){
+                        chatListView.getItems().addAll(result);
+                    }
+                    serverOutput.println("/user " + userID + " " + usuario);
+                }
+            }
         });
     }
-    private void cambiarFoto(String id, VBox chatArea) {
+
+    private void closeClient() {
+        System.exit(0);
+    }
+
+    private void cambiarFoto(String id, VBox chatArea, BorderPane root, SplitPane splitPane) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Seleccionar Foto");
 
@@ -154,6 +216,8 @@ public class ChatClientFX extends Application {
                 e.printStackTrace();
             }
         }
+
+        setupProfilePicture(root);
     }
     private void setupProfilePicture(BorderPane root) {
         // Crea un ImageView con la imagen predefinida
@@ -161,11 +225,11 @@ public class ChatClientFX extends Application {
         //  System.out.println(sentencia+" SENTENCIA DEL SELECT");
         SELECT_ID selectFOTO = new SELECT_ID(Directorio);
         String linkfoto =  selectFOTO.execute(sentencia);
-       // System.out.println("foto de perfil: " + linkfoto);
-       // System.out.println("D:\\USUARIO\\Escritorio\\CUATRI 6\\PROGRAMACIÓN ORIENTADA A OBJETOS\\PROYECTO\\PROYECTO_CHAT\\chatsito\\"+linkfoto);
+        // System.out.println("foto de perfil: " + linkfoto);
+        // System.out.println("D:\\USUARIO\\Escritorio\\CUATRI 6\\PROGRAMACIÓN ORIENTADA A OBJETOS\\PROYECTO\\PROYECTO_CHAT\\chatsito\\"+linkfoto);
 
         Image defaultImage = new Image("D:\\USUARIO\\Escritorio\\CUATRI 6\\PROGRAMACIÓN ORIENTADA A OBJETOS\\PROYECTO\\PROYECTO_CHAT\\chatsito\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT\\FOTOS\\"+linkfoto);
-     //  Image defaultImage = new Image("D:\\USUARIO\\Escritorio\\CUATRI 6\\PROGRAMACIÓN ORIENTADA A OBJETOS\\PROYECTO\\PROYECTO_CHAT\\chatsito\\"+linkfoto);
+        //  Image defaultImage = new Image("D:\\USUARIO\\Escritorio\\CUATRI 6\\PROGRAMACIÓN ORIENTADA A OBJETOS\\PROYECTO\\PROYECTO_CHAT\\chatsito\\"+linkfoto);
         ImageView profileImageView = new ImageView(defaultImage);
 
         // Configura la imagen en un círculo
@@ -180,12 +244,4 @@ public class ChatClientFX extends Application {
         root.setTop(profilePane);
     }
 
-
-    private void closeClient() {
-        System.exit(0);
-    }
-
-    public void setDirectorio(String directorio) {
-        Directorio = directorio;
-    }
 }

@@ -1,4 +1,4 @@
-    USE D:\USUARIO\Escritorio\CUATRI 6\PROGRAMACIÓN ORIENTADA A OBJETOS\PROYECTO\PROYECTO_CHAT\chatsito\chatsito\src\main\java\com\example\chatsito\BD_CHAT
+USE D:\USUARIO\Escritorio\CUATRI 6\PROGRAMACIÓN ORIENTADA A OBJETOS\PROYECTO\PROYECTO_CHAT\chatsito\chatsito\src\main\java\com\example\chatsito\BD_CHAT
 CREATE TABLE Usuarios (
   id INT NOT NULL PRIMARY KEY,
   username VARCHAR(50) NOT NULL,

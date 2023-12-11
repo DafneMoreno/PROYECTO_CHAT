@@ -13,17 +13,15 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.Socket;
 
 public class Registro    extends Application {
     private String Directorio=".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
     public static void main(String[] args) {
         launch(args);
     }
-
+    private PrintWriter serverOutput;
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Registro de Usuario");
@@ -74,13 +72,15 @@ public class Registro    extends Application {
                     alertWarning.showAndWait();
                     break;
                 case 0:
-                    int nuevoId = obtenerProximoId();
-                    String id= String.valueOf(nuevoId);
-                //    String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
-                    String sentencia = "INSERT INTO Usuarios (id,username,password,fotoperfil) VALUES ("+id+","+usuarioInput.getText()+","+contrasenaInput.getText()+",img.png)";
-                    System.out.println(sentencia);
-                    INSERT.main(Directorio, sentencia);
-                    System.out.println("Registro exitoso");
+
+                    try {
+                        Socket socket = new Socket("192.168.100.33", 12345);
+                        serverOutput = new PrintWriter(socket.getOutputStream(), true);
+                        serverOutput.println("/registroUser " + usuarioInput.getText());
+                        serverOutput.println("/registroContra " + contrasenaInput.getText());
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     Alert alertSuccess = new Alert(Alert.AlertType.INFORMATION);
                     alertSuccess.setTitle("Registro Exitoso");
                     alertSuccess.setHeaderText(null);
