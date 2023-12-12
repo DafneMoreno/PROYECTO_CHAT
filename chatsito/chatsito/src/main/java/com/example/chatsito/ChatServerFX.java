@@ -1,9 +1,11 @@
 package com.example.chatsito;
 
+import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.SELECT_Usuarios;
 import javafx.application.Application;
 import javafx.application.Platform;
 import com.example.chatsito.BD_CHAT.SENTENCIAS.SENTENCIAS.INSERT;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
@@ -17,6 +19,7 @@ import java.util.Scanner;
 
 public class ChatServerFX extends Application {
     private String Directorio="./chatsito/src/main/java/com/example/chatsito/BD_CHAT";
+    private Registro registro;
 
     private String userID;
     private final List<PrintWriter> clients = new ArrayList<>();
@@ -28,7 +31,9 @@ public class ChatServerFX extends Application {
     public void setUserID(String userID) {
         this.userID = userID;
     }
-
+    public void setRegistro(Registro registro) {
+        this.registro = registro;
+    }
     public void start(Stage primaryStage) {
         chatArea = new TextArea();
         chatArea.setEditable(false);
@@ -66,79 +71,117 @@ public class ChatServerFX extends Application {
     }
 
     private void handleClient(Socket clientSocket) {
+        String usuario = "";
+        String contra = "";
         try {
             Scanner scanner = new Scanner(clientSocket.getInputStream());
 
             while (scanner.hasNextLine()) {
                 String message = scanner.nextLine();
-                String usuario = "";
-                String contra = "";
 
-                // Validar el formato del mensaje
-                if (message.startsWith("/registroUser") && message.contains("/registroContra")) {
-                    // Extraer usuario y contraseña del mensaje
+
+                if (message.contains("/registroUser")) {
                     usuario = message.replaceAll("^/registroUser\\s+", "");
-                    contra = message.replaceAll("^/registroContra\\s+", "");
-
-                    // Aplicar las validaciones necesarias (por ejemplo, longitud mínima)
-                    if (usuario.length() < 3 || contra.length() < 6) {
-                        enviarMensajeAlCliente("Error: Usuario o contraseña no cumplen con los requisitos mínimos.");
-                        continue;  // Saltar al siguiente ciclo si hay un error
-                    }
-
-
-                    // Resto de la lógica del servidor (insertar en la base de datos, broadcast, etc.)
-                    int nuevoId = obtenerProximoId();
-                    String id = String.valueOf(nuevoId);
-                    String sentencia = "INSERT INTO Usuarios (id, username, password, fotoperfil) VALUES ('" + id + "','" + usuario + "','" + contra + "','img.png')";
-                    System.out.println(sentencia);
-                    INSERT.main(Directorio, sentencia);
-                    System.out.println("Registro exitoso");
-
-                    if (!message.contains("/clean")) {
-                        broadcastMessage(message);
-                        try {
-                            File file = new File("./chatsito/src/main/java/com/example/chatsito/BD_CHAT/Mensajes.csv");
-                            FileWriter writer = new FileWriter(file, true);
-                            if (!message.contains("/user")) {
-                                writer.write(message + "\n");
-                            }
-                            writer.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        try {
-                            ArrayList<String> lines = readCSV("./chatsito/src/main/java/com/example/chatsito/BD_CHAT/Mensajes.csv");
-                            for (String line : lines) {
-                                broadcastMessage(line);
-                            }
-                        } catch (FileNotFoundException e) {
-                            System.err.println("Archivo no encontrado: " + e.getMessage());
-                        }
-                    }
-
-                } else {
-                    // Mensaje no válido
-                    enviarMensajeAlCliente("Error: Formato de mensaje no válido.");
                 }
+                if (message.contains("/registroContra")) {
+                    contra = message.replaceAll("^/registroContra\\s+", "");
+                }
+
+
+                if (!usuario.isEmpty() && !contra.isEmpty()) {
+                    int resultadoValidacion = validarRegistro(usuario, contra);
+
+                    switch (resultadoValidacion) {
+                        case 1:
+                            // Usuario ya existe o la contraseña es demasiado corta
+                            enviarRespuestaAlCliente(clientSocket, "1");
+                            break;
+                        case 0:
+                            enviarRespuestaAlCliente(clientSocket, "0");
+                            System.out.println(usuario + contra);
+                            int nuevoId = obtenerProximoId();
+                            String id = String.valueOf(nuevoId);
+                            String sentencia = "INSERT INTO Usuarios (id, username, password, fotoperfil) VALUES (" + id + "," + usuario + "," + contra + ",img.png)";
+                            System.out.println(sentencia);
+                            INSERT.main(Directorio, sentencia);
+                            break;
+                        case -1:
+                            enviarRespuestaAlCliente(clientSocket, "-1");
+                            break;
+                    }
+
+
+                }
+                if(!message.contains("/clean")){
+                    broadcastMessage(message);
+                    try {
+                        File file = new File("./chatsito/src/main/java/com/example/chatsito/BD_CHAT/Mensajes.csv");
+                        FileWriter writer = new FileWriter(file, true);
+                        if(!message.contains("/user")){
+                            writer.write(message + "\n");
+                        }
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        ArrayList<String> lines = readCSV("./chatsito/src/main/java/com/example/chatsito/BD_CHAT/Mensajes.csv");
+                        for (String line : lines) {
+                            broadcastMessage(line);
+                        }
+                    } catch (FileNotFoundException e) {
+                        System.err.println("Archivo no encontrado: " + e.getMessage());
+                    }
+
+                }
+
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    private void enviarMensajeAlCliente(String mensaje) {
-        // Enviar un mensaje al cliente indicando el resultado de las validaciones
-        Platform.runLater(() -> chatArea.appendText("Mensaje al cliente: " + mensaje + "\n"));
-
-        for (PrintWriter client : clients) {
-            client.println("Mensaje del servidor: " + mensaje);
+    private void enviarRespuestaAlCliente(Socket clientSocket, String respuesta) {
+        try {
+            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+            writer.println(respuesta);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
+    private int validarRegistro(String usuario, String contrasena) {
+        // String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
+        String sentencia= "SELECT * FROM Usuarios WHERE usuario= "+usuario+" AND password= "+ contrasena;
+        System.out.println(sentencia);
+        return SELECT_Usuarios.main(Directorio, sentencia, usuario, contrasena);
+    }
 
+    private int obtenerProximoId() {
+        int maxId = 0;
 
+        try (BufferedReader br = new BufferedReader(new FileReader(Directorio+"\\Usuarios.csv"))) {
+            String line;
+
+            // Ignorar la primera línea (encabezados)
+            br.readLine();
+
+            while ((line = br.readLine()) != null) {
+                String[] campos = line.split(",");
+                if (campos.length > 0) {
+                    int id = Integer.parseInt(campos[0].trim());
+
+                    if (id > maxId) {
+                        maxId = id;
+                    }
+                }
+            }
+        } catch (IOException | NumberFormatException e) {
+            e.printStackTrace();
+        }
+
+        return maxId + 1;
+    }
     private static ArrayList<String> readCSV(String filePath) throws FileNotFoundException {
         ArrayList<String> lines = new ArrayList<>();
 
@@ -158,33 +201,7 @@ public class ChatServerFX extends Application {
             client.println(message);
         }
     }
-    private int obtenerProximoId() {
-        int maxId = 0;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(Directorio+"\\Usuarios.csv"))) {
-            String line;
-
-            // Ignorar la primera línea (encabezados)
-            br.readLine();
-
-            while ((line = br.readLine()) != null) {
-                String[] campos = line.split(",");
-                if (campos.length > 0) {
-                    // Eliminar comillas simples antes de convertir la cadena en un entero
-                    String idStr = campos[0].trim().replace("'", "");
-                    int id = Integer.parseInt(idStr);
-
-                    if (id > maxId) {
-                        maxId = id;
-                    }
-                }
-            }
-        } catch (IOException | NumberFormatException e) {
-            e.printStackTrace();
-        }
-
-        return maxId + 1;
-    }
 
 
     private void closeServer() {
