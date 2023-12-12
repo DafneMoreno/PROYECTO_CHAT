@@ -75,7 +75,7 @@ public class SELECT_ID {
                         String[] valores = fila.split(",");
                         if (cumpleCondicion(valores, encabezados, condicion)) {
                             // Mostrar valor de la columna 'id'
-                            int indiceID = Arrays.asList(columnas).indexOf("id");
+                            int indiceID = Arrays.asList(columnas).indexOf(columnasSeleccionadas);
                             if (indiceID >= 0 && indiceID < valores.length) {
                                 result = valores[indiceID].trim();
                                 return result;

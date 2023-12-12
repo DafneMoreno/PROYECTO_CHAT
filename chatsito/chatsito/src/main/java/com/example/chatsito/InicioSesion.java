@@ -101,7 +101,37 @@ public void setDirectorio(String Directorio) {
         // Acción del botón de inicio de sesión
 
 
-        iniciarsesionbtn.setOnAction(e ->
+        iniciarsesionbtn.setOnAction(e ->{
+        int resultado = validarCredenciales(username.getText(), password.getText());
+        switch (resultado) {
+            case 1:
+
+                System.out.println("Inicio de sesión exitoso");
+                //  String directorio= ".\\chatsito\\src\\main\\java\\com\\example\\chatsito\\BD_CHAT";
+                String sentencia= "SELECT id FROM Usuarios WHERE username= "+username.getText() +" AND password = "+password.getText();
+                //  System.out.println(sentencia+" SENTENCIA DEL SELECT");
+                SELECT_ID selectID = new SELECT_ID(Directorio);
+                // selectID.execute(sentencia);
+
+                // Obtener el resultado
+                String ID_DEL_USUARIO =  selectID.execute(sentencia);
+                System.out.println("ID: " + ID_DEL_USUARIO);
+                abrirVentanaServer(ID_DEL_USUARIO);
+                abrirVentanaCliente(ID_DEL_USUARIO);
+                break;
+            case 0:
+                System.out.println("Credenciales incorrectas");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error de inicio de sesión");
+                alert.setHeaderText(null);
+                alert.setContentText("Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.");
+                alert.showAndWait();
+                break;
+            case -1:
+                System.out.println("La tabla no tiene las columnas 'username' o 'password'.");
+                // Realiza las acciones correspondientes a un error en la tabla
+                break;
+        }
         });
 
 
