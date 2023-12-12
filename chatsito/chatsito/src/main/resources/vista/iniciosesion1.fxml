@@ -8,16 +8,16 @@
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="510.0" prefWidth="713.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
    <children>
 
-      <ImageView fx:id="png1" fitHeight="510.0" fitWidth="722.0" layoutX="-8.0">
+      <ImageView fx:id="png1" fitHeight="510.0" fitWidth="424.0" layoutX="298.0">
          <image>
             <Image url="@../img/iniciosesion.jpg" />
          </image>
       </ImageView>
-      <AnchorPane layoutX="217.0" layoutY="102.0" prefHeight="306.0" prefWidth="279.0" style="-fx-background-color: #212121;">
+      <AnchorPane focusTraversable="true" layoutX="357.0" layoutY="102.0" prefHeight="306.0" prefWidth="279.0" style="-fx-background-color: #ffffff; -fx-background-radius: 20;">
          <children>
-            <Label layoutX="90.0" layoutY="40.0" text="Login" textFill="WHITE">
+            <Label layoutX="90.0" layoutY="40.0" text="Login" textFill="#1f9e72">
                <font>
-                  <Font name="Tahoma Bold" size="36.0" />
+                  <Font name="Yu Gothic Medium" size="36.0" />
                </font>
             </Label>
             <AnchorPane layoutX="90.0" layoutY="93.0" prefHeight="4.0" prefWidth="100.0" style="-fx-background-color: #76ff03;" />
@@ -40,5 +40,6 @@
             </ImageView>
          </children>
       </AnchorPane>
+      <AnchorPane layoutY="-4.0" prefHeight="516.0" prefWidth="298.0" />
    </children>
 </AnchorPane>
